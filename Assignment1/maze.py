@@ -216,22 +216,32 @@ class Maze:
             s = self.map[start];
             # Add the starting position in the maze to the path
             path.append(start);
+            path_minotaur.append(self.minotaur)
             # Move to next state given the policy and the current state
             next_s = self.__move(s,policy[s]);
+            self.move_minotaur()
             # Add the position in the maze corresponding to the next state
             # to the path
             path.append(self.states[next_s]);
+            path_minotaur.append(self.minotaur)
             # Loop while state is not the goal state
             while s != next_s:
                 # Update state
                 s = next_s;
                 # Move to next state given the policy and the current state
                 next_s = self.__move(s,policy[s]);
+                self.move_minotaur();
                 # Add the position in the maze corresponding to the next state
                 # to the path
                 path.append(self.states[next_s])
+                path_minotaur.append(self.minotaur);
                 # Update time and state for next iteration
                 t +=1;
+                if self.states[next_s] == self.minotaur:
+                    # print("me: ",self.states[next_s], "minotaur",self.minotaur)
+                    return path, path_minotaur, False
+                if self.states[next_s] == self.goal:
+                    return path, path_minotaur, True
         return path, path_minotaur, False
 
 
