@@ -205,7 +205,7 @@ class Maze:
                 t +=1;
                 s = next_s;
                 if self.states[next_s] == self.minotaur:
-                    print("me: ",self.states[next_s], "minotaur",self.minotaur)
+                    # print("me: ",self.states[next_s], "minotaur",self.minotaur)
                     return path, path_minotaur, False
                 if self.states[next_s] == self.goal:
                     return path, path_minotaur, True
