@@ -58,7 +58,7 @@ class Maze:
 
     def move_minotaur(self):
         current_row, current_col = self.minotaur
-        move = random.randint(0, 4)
+        move = random.randint(1, 4) # change 1 to 0 for complete moves
         row = self.minotaur[0] + self.actions[move][0]
         col = self.minotaur[1] + self.actions[move][1]
         invalid_move = (row == -1) or (row == self.maze.shape[0]) or \
@@ -439,6 +439,10 @@ def animate_solution(maze, path, path_minotaur):
         grid.get_celld()[(path_minotaur[i])].set_facecolor(LIGHT_PURPLE)
         grid.get_celld()[(path_minotaur[i])].get_text().set_text('Minotaur')
         if i > 0:
+            if path[i] == path_minotaur[i]:
+                grid.get_celld()[(path[i])].set_facecolor(LIGHT_RED)
+                grid.get_celld()[(path[i])].get_text().set_text('Player died')
+                continue
             if path[i] == path[i-1]:
                 grid.get_celld()[(path[i])].set_facecolor(LIGHT_GREEN)
                 grid.get_celld()[(path[i])].get_text().set_text('Player is out')

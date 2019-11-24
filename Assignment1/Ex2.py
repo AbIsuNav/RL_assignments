@@ -18,10 +18,16 @@ mz.draw_maze(maze)
 env = mz.Maze(maze)
 gamma = 29.0/30.0
 epsilon = 0.0001
-V, policy = mz.value_iteration(env, gamma, epsilon);
-# Simulate the shortest path starting from position A
 method = 'ValIter';
+win_count = 0.0
 start = (0, 0);
-path, pathm, win = env.simulate(start, policy, method);
+runs = 10000
+for _ in range(runs):
+    V, policy = mz.value_iteration(env, gamma, epsilon);
+    # Simulate the shortest path starting from position A
+    path, pathm, win = env.simulate(start, policy, method);
+    if win:
+        win_count += 1.0
 
-mz.animate_solution(maze, path, pathm)
+prob = win_count/runs
+print("Final probability: ", prob)
