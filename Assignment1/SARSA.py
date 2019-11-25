@@ -147,7 +147,3 @@ while run < iterations:
 plt.figure()
 plt.plot(list(range(iterations)),value_func)
 plt.show()
-
-
-
-
