@@ -34,5 +34,5 @@ for i in range(1,21):
 prob = win_count/10000
 
 plt.figure()
-plt.plot(prob, list(range(1,21)))
+plt.plot(list(range(1,21)),prob)
 plt.show()

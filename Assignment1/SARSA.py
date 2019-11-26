@@ -16,7 +16,21 @@ terminals = []
 penalities = 0
 police_position_init = [3,3]
 police_position = police_position_init
-
+reward[1, 1] = 1
+colors[5] = (0, 255, 0)
+terminals.append(n ** 2 - 1)
+Q = np.zeros((n ** 2, 5))# Initializing Q-Table
+n_arr = np.zeros((n ** 2, 5))
+actions = {"up": 0, "down": 1, "left": 2, "right": 3, "stay": 4}  # possible actions
+states = {}
+k = 0
+for i in range(n):
+    for j in range(n):
+        states[(i, j)] = k
+        k += 1
+gamma = 0.8
+current_pos = [0, 0]
+epsilon = 0.2
 
 def move_police(police_position):
     move = random.randint(0, 3)  # change 1 to 0 for complete moves
@@ -29,24 +43,6 @@ def move_police(police_position):
     elif move == 3:  # move right
         police_position[1] += 1
     return police_position
-
-
-reward[1, 1] = 1
-colors[5] = (0, 255, 0)
-terminals.append(n ** 2 - 1)
-
-Q = np.zeros((n ** 2, 5))  # Initializing Q-Table
-actions = {"up": 0, "down": 1, "left": 2, "right": 3, "stay": 4}  # possible actions
-states = {}
-k = 0
-for i in range(n):
-    for j in range(n):
-        states[(i, j)] = k
-        k += 1
-alpha = 0.01
-gamma = 0.8
-current_pos = [0, 0]
-epsilon = 0.25
 
 
 def select_action(current_state):
@@ -95,54 +91,45 @@ def get_reward():
         return reward[current_pos[0], current_pos[1]]
 
 
-def episode():
+def episode(action):
     global current_pos, epsilon, police_position
     current_state = states[(current_pos[0], current_pos[1])]
-    action = select_action(current_state)
-    if action == 0:  # move up
+    new_action = select_action(current_state)
+    if new_action == 0:  # move up
         current_pos[0] -= 1
-    elif action == 1:  # move down
+    elif new_action == 1:  # move down
         current_pos[0] += 1
-    elif action == 2:  # move left
+    elif new_action == 2:  # move left
         current_pos[1] -= 1
-    elif action == 3:  # move right
+    elif new_action == 3:  # move right
         current_pos[1] += 1
     new_state = states[(current_pos[0], current_pos[1])]
-    if new_state not in terminals:
-        Q[current_state, action] += alpha * (
-                    get_reward() + gamma * (np.max(Q[new_state])) - Q[current_state, action])
-        police_position = move_police(police_position)
-        return True
-    else:
-        Q[current_state, action] += alpha * (get_reward() - Q[current_state, action])
-        current_pos = [0, 0]
-        police_position = police_position_init
-        #if epsilon > 0.05:
-        #    epsilon -= 3e-4  # reducing as time increases to satisfy Exploration & Exploitation Tradeoff
-        return False
+    alpha = 1/(pow(n_arr[current_state, action]+1, 2/3))
+    Q[current_state, action] += alpha * (get_reward() + gamma * (Q[new_state,new_action]) - Q[current_state, action])
+    n_arr[current_state,action] += 1
+    police_position = move_police(police_position)
+    return new_action
+
+#
+# def layout():
+#     c = 0
+#     for i in range(0, scrx, 100):
+#         for j in range(0, scry, 100):
+#             pygame.draw.rect(screen, (255, 255, 255), (j, i, j + 100, i + 100), 0)
+#             pygame.draw.rect(screen, colors[c], (j + 3, i + 3, j + 95, i + 95), 0)
+#             c += 1
+#             pygame.draw.circle(screen, (25, 129, 230), (current_pos[1] * 100 + 50, current_pos[0] * 100 + 50), 30, 0)
 
 
-def layout():
-    c = 0
-    for i in range(0, scrx, 100):
-        for j in range(0, scry, 100):
-            pygame.draw.rect(screen, (255, 255, 255), (j, i, j + 100, i + 100), 0)
-            pygame.draw.rect(screen, colors[c], (j + 3, i + 3, j + 95, i + 95), 0)
-            c += 1
-            pygame.draw.circle(screen, (25, 129, 230), (current_pos[1] * 100 + 50, current_pos[0] * 100 + 50), 30, 0)
-
-
-iterations = 10000
+iterations = 10000000
 run=0
 value_func = np.zeros(iterations)
+action_ = r(0, 4)
 while run < iterations:
     # sleep(0.3)
-    flag_episode = True
-    while flag_episode:
-        flag_episode = episode()
-    #print(run)
-    value_func[run] = np.sum(Q[0])
-    run+=1
+    action_ = episode(action_)
+    value_func[run] = np.max(Q[0])
+    run += 1
 
 plt.figure()
 plt.plot(list(range(iterations)),value_func)
