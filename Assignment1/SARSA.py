@@ -19,36 +19,55 @@ police_position = police_position_init
 reward[1, 1] = 1
 colors[5] = (0, 255, 0)
 terminals.append(n ** 2 - 1)
-Q = np.zeros((n ** 2, 5))# Initializing Q-Table
-n_arr = np.zeros((n ** 2, 5))
+Q = np.zeros((n ** 2, n**2, 5))# Initializing Q-Table
+n_arr = np.zeros((n ** 2, n**2,5))
 actions = {"up": 0, "down": 1, "left": 2, "right": 3, "stay": 4}  # possible actions
 states = {}
+states_police = {}
 k = 0
+k_police = 0
 for i in range(n):
     for j in range(n):
         states[(i, j)] = k
         k += 1
+
+for i in range(n):
+    for j in range(n):
+        states_police[(i, j)] = k_police
+        k_police += 1
 gamma = 0.8
 current_pos = [0, 0]
-epsilon = 0.2
+epsilon = 0.1
 
 def move_police(police_position):
     move = random.randint(0, 3)  # change 1 to 0 for complete moves
-    if move == 0:  # move up
-        police_position[0] -= 1
+    if move == 0 :  # move up
+        if police_position[0] == 0:
+            move_police(police_position)
+        else :
+            police_position[0] -= 1
     elif move == 1:  # move down
-        police_position[0] += 1
+        if police_position[0] == 3:
+            move_police(police_position)
+        else:
+            police_position[0] += 1
     elif move == 2:  # move left
-        police_position[1] -= 1
+        if police_position[1] == 0:
+            move_police(police_position)
+        else:
+            police_position[1] -= 1
     elif move == 3:  # move right
-        police_position[1] += 1
+        if police_position[1] == 3:
+            move_police(police_position)
+        else:
+            police_position[1] += 1
     return police_position
 
 
-def select_action(current_state):
+def select_action(current_state, current_police_state):
     global current_pos, epsilon
     possible_actions = []
-    if np.random.uniform() <= epsilon:
+    if np.random.uniform() > epsilon:
         if current_pos[0] != 0:
             possible_actions.append("up")
         if current_pos[0] != n - 1:
@@ -60,26 +79,26 @@ def select_action(current_state):
         possible_actions.append("stay")
         action = actions[possible_actions[r(0, len(possible_actions) - 1)]]
     else:
-        m = np.min(Q[current_state])
+        m = np.min(Q[current_state, current_police_state])
         if current_pos[0] != 0:  # up
-            possible_actions.append(Q[current_state, 0])
+            possible_actions.append(Q[current_state, current_police_state, 0])
         else:
             possible_actions.append(m - 100)
         if current_pos[0] != n - 1:  # down
-            possible_actions.append(Q[current_state, 1])
+            possible_actions.append(Q[current_state, current_police_state, 1])
         else:
             possible_actions.append(m - 100)
         if current_pos[1] != 0:  # left
-            possible_actions.append(Q[current_state, 2])
+            possible_actions.append(Q[current_state, current_police_state, 2])
         else:
             possible_actions.append(m - 100)
         if current_pos[1] != n - 1:  # right
-            possible_actions.append(Q[current_state, 3])
+            possible_actions.append(Q[current_state, current_police_state, 3])
         else:
             possible_actions.append(m - 100)
-        possible_actions.append(Q[current_state, 4])
-        action = random.choice([i for i, a in enumerate(possible_actions) if a == max(
-            possible_actions)])  # randomly selecting one of all possible actions with maximin value
+        possible_actions.append(Q[current_state, current_police_state, 4])
+        action = random.choice([i for i, a in enumerate(possible_actions) if a == np.max(
+            np.array(possible_actions))])  # randomly selecting one of all possible actions with maximin value
     return action
 
 
@@ -93,8 +112,10 @@ def get_reward():
 
 def episode(action):
     global current_pos, epsilon, police_position
-    current_state = states[(current_pos[0], current_pos[1])]
-    new_action = select_action(current_state)
+    current_robber_state = states[(current_pos[0], current_pos[1])]
+    current_police_state = states_police[(police_position[0], police_position[1])]
+    # current_state = (current_robber_state,current_police_state)
+    new_action = select_action(current_robber_state,current_police_state)
     if new_action == 0:  # move up
         current_pos[0] -= 1
     elif new_action == 1:  # move down
@@ -103,11 +124,14 @@ def episode(action):
         current_pos[1] -= 1
     elif new_action == 3:  # move right
         current_pos[1] += 1
-    new_state = states[(current_pos[0], current_pos[1])]
-    alpha = 1/(pow(n_arr[current_state, action]+1, 2/3))
-    Q[current_state, action] += alpha * (get_reward() + gamma * (Q[new_state,new_action]) - Q[current_state, action])
-    n_arr[current_state,action] += 1
-    police_position = move_police(police_position)
+    new_state_robber = states[(current_pos[0], current_pos[1])]
+    new_police_position = move_police(police_position)
+    new_police_state = states_police[(new_police_position[0], new_police_position[1])]
+    # new_state = (new_state_robber,new_police_state)
+    alpha = 1/(pow(n_arr[current_robber_state,current_police_state, action]+1, 2/3))
+    Q[current_robber_state,current_police_state, action] += alpha * (get_reward() + gamma * (Q[new_state_robber,new_police_state,new_action]) - Q[current_robber_state,current_police_state, action])
+    n_arr[current_robber_state,current_police_state,action] += 1
+
     return new_action
 
 #
@@ -121,15 +145,17 @@ def episode(action):
 #             pygame.draw.circle(screen, (25, 129, 230), (current_pos[1] * 100 + 50, current_pos[0] * 100 + 50), 30, 0)
 
 
-iterations = 10000000
+iterations = 10000
 run=0
 value_func = np.zeros(iterations)
 action_ = r(0, 4)
 while run < iterations:
     # sleep(0.3)
+
     action_ = episode(action_)
-    value_func[run] = np.max(Q[0])
+    value_func[run] = np.max(Q[0,:,:])
     run += 1
+    epsilon = epsilon / (run + 1)
 
 plt.figure()
 plt.plot(list(range(iterations)),value_func)
