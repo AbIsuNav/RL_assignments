@@ -81,10 +81,13 @@ def select_action(current_state, current_police_state):
             possible_actions.append('right')
         vals.append(Q[current_state, current_police_state, 4])
         possible_actions.append('stay')
+        # print("eps > 0", vals)
+        # print("actions", possible_actions)
         # action = random.choice([i for i, a in enumerate(possible_actions) if a == np.max(
         #     np.array(possible_actions))])  # randomly selecting one of all possible actions with maximin value
         max_ = random.choice([i for i, a in enumerate(vals) if a == np.max(vals)])
         action = actions[possible_actions[max_]]
+        # print("action = ", action)
     return action
 
 def is_notpossible(current_state,current_police_state):
@@ -125,12 +128,12 @@ def random_pos():
     A[actions.get("stay")] = 1
     return A
 
-def epsilon_greedy(state1, state2):
-    AA= random_pos()
-    A = AA * epsilon / np.sum(AA)
-    best_action = is_notpossible(state1, state2)
-    A[best_action] += (1.0 - epsilon)
-    return A
+# def epsilon_greedy(state1, state2):
+#     AA= random_pos()
+#     A = AA * epsilon / np.sum(AA)
+#     best_action = is_notpossible(state1, state2)
+#     A[best_action] += (1.0 - epsilon)
+#     return A
 
 def get_reward():
     global police_position, current_pos
@@ -155,13 +158,13 @@ def episode():
         current_pos[1] -= 1
     elif n_action == 3:  # move right
         current_pos[1] += 1
-
+    # print("new action = ",n_action)
     new_state_robber = states[(current_pos[0], current_pos[1])]
     new_police_position = move_police(police_position)
     new_police_state = states[(new_police_position[0], new_police_position[1])]
     #if new_state not in terminals:
-    n_arr[current_robber_state, current_police_state, p_action] += 1
-    alpha = 1/pow(n_arr[current_robber_state, current_police_state, p_action], (2/3))
+    n_arr[current_robber_state, current_police_state, n_action] += 1
+    alpha = 1/pow(n_arr[current_robber_state, current_police_state, n_action], (2/3))
     Q[current_robber_state, current_police_state, p_action] += alpha * (
                     get_reward() + gamma * Q[new_state_robber,new_police_state, n_action] - Q[current_robber_state, current_police_state, p_action])
     p_action = n_action
@@ -169,9 +172,11 @@ def episode():
     #     epsilon -= 3e-4 # reducing as time increases to satisfy Exploration & Exploitation Tradeoff
 
 
-iterations = 1000000
+iterations = 10000000
 run=0
-value_func = np.zeros(iterations)
+value_func_stay = np.zeros(iterations)
+value_func_up = np.zeros(iterations)
+value_func_right = np.zeros(iterations)
 current_robber_state = states[(current_pos[0], current_pos[1])]
 current_police_state = states[(police_position[0], police_position[1])]
 #action_probs = epsilon_greedy(current_robber_state, current_police_state)
@@ -181,12 +186,20 @@ p_action = select_action(current_robber_state,current_police_state)
 while run < iterations:
     # sleep(0.3)
     episode()
-    value_func[run] = np.max(Q[0,15])
+    value_func_stay[run] = np.max(Q[0,15,4])
+    value_func_up[run] = np.max(Q[0,15,0])
+    value_func_right[run] = np.max(Q[0,15,3])
     run+=1
-    #epsilon = epsilon + 0.5/(run+1)
+    # epsilon = 0.1 #+ 0.5/(run+1)
 
+x = list(range(iterations))
 plt.figure()
-plt.plot(list(range(iterations)),value_func)
+plt.plot(x,value_func_stay,'r',label = 'stay')
+plt.plot(x,value_func_up,'b', label = 'up')
+plt.plot(x,value_func_right,'g', label = 'right')
+plt.xlabel('Iteration')
+plt.ylabel('Q value')
+plt.legend()
 plt.show()
 
 
