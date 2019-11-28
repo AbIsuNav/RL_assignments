@@ -177,6 +177,7 @@ run=0
 value_func_stay = np.zeros(iterations)
 value_func_up = np.zeros(iterations)
 value_func_right = np.zeros(iterations)
+value_func_max = np.zeros(iterations)
 current_robber_state = states[(current_pos[0], current_pos[1])]
 current_police_state = states[(police_position[0], police_position[1])]
 #action_probs = epsilon_greedy(current_robber_state, current_police_state)
@@ -189,6 +190,7 @@ while run < iterations:
     value_func_stay[run] = np.max(Q[0,15,4])
     value_func_up[run] = np.max(Q[0,15,0])
     value_func_right[run] = np.max(Q[0,15,3])
+    value_func_max[run] = np.max(Q[0, 15])
     run+=1
     # epsilon = 0.1 #+ 0.5/(run+1)
 
@@ -197,6 +199,7 @@ plt.figure()
 plt.plot(x,value_func_stay,'r',label = 'stay')
 plt.plot(x,value_func_up,'b', label = 'up')
 plt.plot(x,value_func_right,'g', label = 'right')
+plt.plot(x,value_func_max,'k', label = 'max of Q at state 0')
 plt.xlabel('Iteration')
 plt.ylabel('Q value')
 plt.legend()
