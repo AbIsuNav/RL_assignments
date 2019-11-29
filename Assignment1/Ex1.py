@@ -21,7 +21,7 @@ win_count = np.zeros(20)
 for i in range(1,21):
     horizon = i
    # print("horizon = ", i)
-    for _ in range(10000):
+    for _ in range(100):
         V, policy = mz.dynamic_programming(env, horizon);
         # Simulate the shortest path starting from position A
         method = 'DynProg';
@@ -29,9 +29,10 @@ for i in range(1,21):
         path, pathm, win = env.simulate(start, policy, method);
         if win:
             win_count[i-1] += 1
+    print(i, win_count[i-1])
 # Show the shortest path
 # mz.animate_solution(maze, path, pathm)
-prob = win_count/10000
+prob = win_count/100
 
 plt.figure()
 plt.plot(list(range(1,21)),prob)

@@ -36,15 +36,16 @@ class Maze:
 
     # Reward values
     STEP_REWARD = 0
-    GOAL_REWARD = 10
-    IMPOSSIBLE_REWARD = -100
-    ENEMY_REWARD = -50
+    GOAL_REWARD = 20
+    IMPOSSIBLE_REWARD = -1000
+    ENEMY_REWARD = -20
     # minotaur=list()
     #
     def __init__(self, maze, weights=None, random_rewards=False, position=(6,5)):
         """ Constructor of the environment Maze.
         """
         self.minotaur = position;
+        self.minotaur_next = position;
         self.maze                     = maze;
         self.goal = (6,5)
         self.actions                  = self.__actions();
@@ -58,7 +59,7 @@ class Maze:
 
     def move_minotaur(self):
         current_row, current_col = self.minotaur
-        move = random.randint(1, 4) # change 1 to 0 for complete moves
+        move = random.randint(0, 4) # change 1 to 0 for complete moves
         row = self.minotaur[0] + self.actions[move][0]
         col = self.minotaur[1] + self.actions[move][1]
         invalid_move = (row == -1) or (row == self.maze.shape[0]) or \
@@ -67,7 +68,7 @@ class Maze:
         if invalid_move:
             self.move_minotaur()
         else:
-            self.minotaur = (row, col)
+            self.minotaur_next = (row, col)
 
 
     def __actions(self):
@@ -149,8 +150,8 @@ class Maze:
                     # Reward for reaching the exit
                     elif s == next_s and self.maze[self.states[next_s]] == 2:
                         rewards[s,a] = self.GOAL_REWARD;
-                    # reward for being 2 steps away from minotaur
-                    elif self.in_radius(next_s):
+                    # reward for being on minotaur
+                    elif self.states[next_s] == self.minotaur_next:
                         rewards[s,a] = self.ENEMY_REWARD;
                     # Reward for taking a step to an empty cell that is not the exit
                     else:
@@ -194,21 +195,22 @@ class Maze:
             path_minotaur.append(self.minotaur)
             while t < horizon-1:
                 # Move to next state given the policy and the current state
+                self.move_minotaur();
                 _, policy = dynamic_programming(self, horizon);
                 next_s = self.__move(s, policy[s,t]);
-                self.move_minotaur();
                 # Add the position in the maze corresponding to the next state
                 # to the path
                 path.append(self.states[next_s]);
                 path_minotaur.append(self.minotaur);
                 # Update time and state for next iteration
                 t +=1;
-                s = next_s;
-                if self.states[next_s] == self.minotaur:
+                if self.states[next_s] == self.minotaur_next:
                     # print("me: ",self.states[next_s], "minotaur",self.minotaur)
                     return path, path_minotaur, False
                 if self.states[next_s] == self.goal:
                     return path, path_minotaur, True
+                s = next_s;
+                self.minotaur = self.minotaur_next
                 
         if method == 'ValIter':
             # Initialize current state, next state and time
@@ -216,32 +218,32 @@ class Maze:
             s = self.map[start];
             # Add the starting position in the maze to the path
             path.append(start);
-            path_minotaur.append(self.minotaur)
             # Move to next state given the policy and the current state
-            next_s = self.__move(s,policy[s]);
-            self.move_minotaur()
+            next_s = self.__move(s, policy[s]);
             # Add the position in the maze corresponding to the next state
             # to the path
+            self.move_minotaur();
             path.append(self.states[next_s]);
-            path_minotaur.append(self.minotaur)
             # Loop while state is not the goal state
             while s != next_s:
                 # Update state
                 s = next_s;
+                self.minotaur = self.minotaur_next
                 # Move to next state given the policy and the current state
-                next_s = self.__move(s,policy[s]);
-                self.move_minotaur();
+                next_s = self.__move(s, policy[s]);
+
+
                 # Add the position in the maze corresponding to the next state
                 # to the path
                 path.append(self.states[next_s])
-                path_minotaur.append(self.minotaur);
                 # Update time and state for next iteration
-                t +=1;
-                if self.states[next_s] == self.minotaur:
+                t += 1;
+                if self.states[next_s] == self.minotaur_next:
                     # print("me: ",self.states[next_s], "minotaur",self.minotaur)
                     return path, path_minotaur, False
                 if self.states[next_s] == self.goal:
                     return path, path_minotaur, True
+                self.move_minotaur();
         return path, path_minotaur, False
 
 

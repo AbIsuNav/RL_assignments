@@ -16,12 +16,12 @@ maze = np.array([
 
 mz.draw_maze(maze)
 env = mz.Maze(maze)
-gamma = 29.0/30.0
-epsilon = 0.0001
+gamma = 1 - (1 / 30.0)
+epsilon = 0.01
 method = 'ValIter';
 win_count = 0.0
 start = (0, 0);
-runs = 10000
+runs = 100
 for _ in range(runs):
     V, policy = mz.value_iteration(env, gamma, epsilon);
     # Simulate the shortest path starting from position A
