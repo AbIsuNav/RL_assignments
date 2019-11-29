@@ -59,7 +59,7 @@ class Maze:
 
     def move_minotaur(self):
         current_row, current_col = self.minotaur
-        move = random.randint(0, 4) # change 1 to 0 for complete moves
+        move = random.randint(1, 4) # change 1 to 0 for complete moves
         row = self.minotaur[0] + self.actions[move][0]
         col = self.minotaur[1] + self.actions[move][1]
         invalid_move = (row == -1) or (row == self.maze.shape[0]) or \
