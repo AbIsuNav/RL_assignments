@@ -59,7 +59,7 @@ class Maze:
 
     def move_minotaur(self):
         current_row, current_col = self.minotaur
-        move = random.randint(0, 4) # change 1 to 0 for complete moves
+        move = random.randint(1, 4) # change 1 to 0 for complete moves
         row = self.minotaur[0] + self.actions[move][0]
         col = self.minotaur[1] + self.actions[move][1]
         invalid_move = (row == -1) or (row == self.maze.shape[0]) or \
@@ -148,7 +148,7 @@ class Maze:
                     if s == next_s and a != self.STAY:
                         rewards[s,a] = self.IMPOSSIBLE_REWARD;
                     # Reward for reaching the exit
-                    elif s == next_s and self.maze[self.states[next_s]] == 2:
+                    elif self.maze[self.states[next_s]] == 2:
                         rewards[s,a] = self.GOAL_REWARD;
                     # reward for being on minotaur
                     elif self.states[next_s] == self.minotaur_next:
@@ -204,11 +204,12 @@ class Maze:
                 path_minotaur.append(self.minotaur);
                 # Update time and state for next iteration
                 t +=1;
+
+                if self.states[next_s] == self.goal:
+                    return path, path_minotaur, True
                 if self.states[next_s] == self.minotaur_next:
                     # print("me: ",self.states[next_s], "minotaur",self.minotaur)
                     return path, path_minotaur, False
-                if self.states[next_s] == self.goal:
-                    return path, path_minotaur, True
                 s = next_s;
                 self.minotaur = self.minotaur_next
                 
